@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FindIT Campus - Chat</title>
+  <script>document.documentElement.dataset.theme=localStorage.getItem("theme")||"";</script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    .chat-page { flex: 1; min-height: 0; padding: 28px 48px; background: var(--bg-ice); display: flex; justify-content: center; }
+    .chat-layout { display: flex; gap: 12px; width: 100%; max-width: 1100px; min-height: 0; }
+
+    /* Daftar chat (kiri) */
+    .chat-list-card { width: 250px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 12px; padding: 14px 8px; display: flex; flex-direction: column; min-height: 0; }
+    .chat-list-card h3 { font-size: 20px; font-weight: 800; padding: 0 10px 10px; border-bottom: 1px solid var(--line-strong); margin: 0 6px 12px; }
+    #listPercakapan { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 0 4px; }
+    .chat-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); cursor: pointer; }
+    .chat-item:hover { background: var(--hover); }
+    .chat-item.active { background: var(--active-item); border-color: var(--active-item); }
+    .chat-item .info { flex: 1; min-width: 0; }
+    .chat-item .nm { font-size: 15px; font-weight: 500; }
+    .chat-item .pv { font-family: Georgia, serif; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .unread-badge { background: var(--primary-navy); color: #fff; font-size: 11px; font-weight: 700; min-width: 22px; height: 22px; border-radius: 11px; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: #9CC5A8; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+    .avatar.lg { width: 46px; height: 46px; font-size: 18px; }
+
+    /* Ruang chat (kanan) */
+    .chat-room { flex: 1; min-width: 0; background: var(--surface); border: 3px solid #1E90FF; border-radius: 12px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+    .room-head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line-strong); }
+    .room-head h4 { font-size: 22px; font-weight: 700; line-height: 1.1; }
+    .room-head small { font-size: 11px; color: var(--text-muted); }
+
+    .item-card { display: none; align-items: center; gap: 10px; margin: 10px 24px 4px; padding: 8px 12px; border-radius: 8px; background: var(--surface); box-shadow: 0 1px 5px rgba(0,0,0,.3); cursor: pointer; width: fit-content; min-width: 220px; }
+    .item-card.show { display: flex; }
+    .item-card .thumb { width: 28px; height: 28px; border-radius: 6px; background: #F4D9A8; overflow: hidden; flex-shrink: 0; }
+    .item-card .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .item-card b { font-size: 12px; }
+
+    .room-body { flex: 1; overflow-y: auto; padding: 14px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .msg-row { animation: bubbleIn .28s cubic-bezier(.2,.9,.3,1.2) both; display: flex; align-items: flex-end; gap: 8px; max-width: 78%; }
+    .msg-row.in { align-self: flex-start; }
+    .msg-row.out { align-self: flex-end; }
+    .bubble { padding: 12px 16px; border-radius: 8px; font-size: 14px; line-height: 1.45; border: 1px solid var(--line-strong); word-break: break-word; white-space: pre-wrap; min-width: 60px; }
+    .in .bubble { color: var(--text-dark); background: var(--bubble-in); }
+    .out .bubble { background: var(--bubble-out); color: #0b1b2b; }
+    .bubble img { display: block; max-width: 230px; max-height: 230px; border-radius: 6px; cursor: pointer; }
+    .bubble img + span { display: block; margin-top: 8px; }
+    .bubble time { display: block; font-size: 10px; color: var(--text-muted); margin-top: 4px; text-align: right; }
+    .room-empty { margin: auto; color: var(--text-muted); text-align: center; font-size: 14px; }
+
+    .room-input { border-top: 1px solid var(--line-strong); padding: 12px 16px; position: relative; }
+    .input-box { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line-strong); border-radius: 10px; padding: 8px 10px 8px 18px; }
+    .input-box input[type=text] { flex: 1; border: none; outline: none; font-size: 14px; background: transparent; min-width: 0; padding: 8px 0; }
+    .input-box input::placeholder { font-weight: 700; color: var(--text-muted); }
+    .icon-btn { background: none; border: none; cursor: pointer; padding: 4px; display: flex; color: var(--text-dark); }
+    .icon-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .send-btn { width: 44px; height: 38px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--bubble-out); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .send-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .emoji-panel { display: none; position: absolute; bottom: 70px; right: 70px; background: var(--surface); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.18); padding: 10px; grid-template-columns: repeat(8, 1fr); gap: 4px; z-index: 20; }
+    .emoji-panel.open { display: grid; }
+    .emoji-panel button { background: none; border: none; font-size: 22px; cursor: pointer; border-radius: 6px; padding: 3px; }
+    .emoji-panel button:hover { background: #EEF4FF; }
+    .preview-bar { display: none; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; color: #444; }
+    .preview-bar.show { display: flex; }
+    .preview-bar img { height: 46px; border-radius: 6px; }
+    .preview-bar button { border: none; background: #eee; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; }
+
+    .typing { display: none; align-items: center; gap: 8px; padding: 0 22px 8px; font-size: 12px; color: var(--text-muted); }
+    .typing.show { display: flex; }
+    .typing .dots { display: inline-flex; gap: 3px; background: var(--bubble-in); padding: 7px 10px; border-radius: 12px; }
+    .typing .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); animation: dotBounce 1.1s infinite; }
+    .typing .dots i:nth-child(2) { animation-delay: .15s; } .typing .dots i:nth-child(3) { animation-delay: .3s; }
+    @keyframes dotBounce { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-5px); opacity: 1; } }
+    @keyframes bubbleIn { from { opacity: 0; transform: translateY(10px) scale(.94); } to { opacity: 1; transform: none; } }
+
+    @media (max-width: 720px) {
+      .chat-page { padding: 12px; }
+      .chat-list-card { width: 110px; }
+      .chat-item .pv, .chat-item .avatar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar"></nav>
+
+  <div class="chat-page">
+    <div class="chat-layout">
+
+      <aside class="chat-list-card">
+        <h3>Chat</h3>
+        <div id="listPercakapan">
+          <div class="chat-item" style="pointer-events:none"><i class="skeleton" style="width:34px;height:34px;border-radius:50%;flex-shrink:0"></i><div class="info"><i class="skeleton" style="display:block;height:13px;width:70%;margin-bottom:7px"></i><i class="skeleton" style="display:block;height:10px;width:90%"></i></div></div><div class="chat-item" style="pointer-events:none"><i class="skeleton" style="width:34px;height:34px;border-radius:50%;flex-shrink:0"></i><div class="info"><i class="skeleton" style="display:block;height:13px;width:70%;margin-bottom:7px"></i><i class="skeleton" style="display:block;height:10px;width:90%"></i></div></div><div class="chat-item" style="pointer-events:none"><i class="skeleton" style="width:34px;height:34px;border-radius:50%;flex-shrink:0"></i><div class="info"><i class="skeleton" style="display:block;height:13px;width:70%;margin-bottom:7px"></i><i class="skeleton" style="display:block;height:10px;width:90%"></i></div></div>
+        </div>
+      </aside>
+
+      <section class="chat-room">
+        <div class="room-head" id="roomHead" style="visibility:hidden;">
+          <div class="avatar lg" id="roomAvatar"></div>
+          <div>
+            <h4 id="txtNamaLawan"></h4>
+            <small id="txtRoleLawan"></small>
+          </div>
+        </div>
+
+        <div class="item-card" id="itemCard">
+          <div class="thumb" id="itemThumb"></div>
+          <b id="itemName"></b>
+        </div>
+
+        <div class="room-body" id="chatBody">
+          <p class="room-empty">Pilih percakapan di sebelah kiri untuk mulai chat.</p>
+        </div>
+
+        <div class="typing" id="typingBar"><span class="dots"><i></i><i></i><i></i></span><span id="typingName"></span> sedang mengetik…</div>
+
+        <div class="room-input">
+          <div class="preview-bar" id="previewBar"><img id="previewImg" alt=""><span id="previewName"></span><button type="button" onclick="batalGambar()" title="Hapus">×</button></div>
+          <div class="emoji-panel" id="emojiPanel"></div>
+          <div class="input-box">
+            <input type="text" id="inputPesan" placeholder="Tulis Pesan...." maxlength="1000" disabled autocomplete="off">
+            <button type="button" class="icon-btn" id="btnGambar" title="Kirim gambar" disabled>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            </button>
+            <button type="button" class="icon-btn" id="btnEmoji" title="Emoji" disabled>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </button>
+            <button type="button" class="send-btn" id="btnKirim" title="Kirim" disabled>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="#0b1b2b"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+            </button>
+          </div>
+          <input type="file" id="inputGambar" accept="image/*" hidden>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/fx.js"></script>
+</body>
+</html>

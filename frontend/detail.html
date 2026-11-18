@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FindIT Campus - Detail Barang</title>
+  <script>document.documentElement.dataset.theme=localStorage.getItem("theme")||"";</script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .detail-container { display: flex; gap: 32px; padding: 48px; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; }
+    .detail-main { flex: 2; min-width: 320px; background: var(--surface); border-radius: 20px; padding: 32px; border: 1px solid var(--border-color); }
+    .detail-sidebar { flex: 1; min-width: 260px; background: var(--surface); border-radius: 20px; padding: 32px; border: 1px solid var(--border-color); height: fit-content; }
+    .detail-head { display: flex; gap: 24px; margin-bottom: 24px; flex-wrap: wrap; }
+    .saran-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+    .saran-item { border: 1px solid var(--border-color); border-radius: 12px; padding: 10px; cursor: pointer; font-size: 13px; }
+    .saran-item:hover { border-color: var(--primary-navy); }
+    .saran-item .img { height: 90px; background: var(--surface-2); border-radius: 8px; overflow: hidden; margin-bottom: 8px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); font-size: 11px; }
+    .saran-item .img img { width: 100%; height: 100%; object-fit: cover; }
+  </style>
+</head>
+<body>
+  <nav class="navbar"></nav>
+
+  <div class="detail-container">
+    <div class="detail-main">
+      <div class="detail-head">
+        <div class="gallery">
+          <div class="gallery-main is-skel" id="galleryMain" onclick="openLightbox()">
+            <img id="mainImg" alt="" style="display:none;">
+            <span id="noImg">Tidak Ada Foto</span>
+            <span class="zoom-hint" id="zoomHint" style="display:none;">🔍 Klik untuk memperbesar</span>
+          </div>
+          <div class="gallery-thumbs" id="thumbContainer"></div>
+        </div>
+        <div style="flex:1; min-width: 200px;">
+          <div id="badgeRow" style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;"></div>
+          <h2 id="txtNamaBarang" class="is-skel" style="font-size: 28px; font-weight: 700;">Memuat nama barang</h2>
+          <p id="txtWaktu" class="is-skel" style="color: var(--text-muted); margin-top: 8px;">Tanggal hilang: memuat data</p>
+          <p id="txtLokasi" class="is-skel" style="color: var(--text-muted); margin-top: 4px;">Lokasi: memuat data lokasi</p>
+          <p id="txtKategori" class="is-skel" style="color: var(--text-muted); margin-top: 4px;">Kategori: memuat</p>
+          <p id="txtPelapor" class="is-skel" style="color: var(--text-muted); margin-top: 4px;">Pelapor: memuat nama</p>
+        </div>
+      </div>
+
+      <div class="timeline" id="timeline"><div class="tl-step"><i class="skeleton" style="display:block;width:28px;height:28px;border-radius:50%;margin:0 auto 8px"></i><i class="skeleton" style="display:block;height:12px;width:55%;margin:0 auto 6px"></i><i class="skeleton" style="display:block;height:10px;width:40%;margin:0 auto"></i></div><div class="tl-step"><i class="skeleton" style="display:block;width:28px;height:28px;border-radius:50%;margin:0 auto 8px"></i><i class="skeleton" style="display:block;height:12px;width:55%;margin:0 auto 6px"></i><i class="skeleton" style="display:block;height:10px;width:40%;margin:0 auto"></i></div><div class="tl-step"><i class="skeleton" style="display:block;width:28px;height:28px;border-radius:50%;margin:0 auto 8px"></i><i class="skeleton" style="display:block;height:12px;width:55%;margin:0 auto 6px"></i><i class="skeleton" style="display:block;height:10px;width:40%;margin:0 auto"></i></div><div class="tl-step"><i class="skeleton" style="display:block;width:28px;height:28px;border-radius:50%;margin:0 auto 8px"></i><i class="skeleton" style="display:block;height:12px;width:55%;margin:0 auto 6px"></i><i class="skeleton" style="display:block;height:10px;width:40%;margin:0 auto"></i></div></div>
+
+      <div id="boxDitolak" style="display:none; background:#FEE2E2; color:#991B1B; border-radius:12px; padding:14px 16px; font-size:14px; margin-bottom:16px;"></div>
+
+      <hr style="border: none; border-top: 1px solid var(--border-color); margin: 24px 0;">
+      <h3 style="font-size: 20px; margin-bottom: 12px;">Deskripsi Barang</h3>
+      <p id="txtDeskripsi" class="is-skel" style="line-height: 1.6; color: #475569; white-space: pre-wrap;">Memuat deskripsi barang, mohon tunggu sebentar ya. Memuat deskripsi barang, mohon tunggu sebentar ya.</p>
+
+      <div id="saranSection" style="display:none;">
+        <h3 style="font-size: 20px; margin: 28px 0 12px 0;" id="saranTitle">Laporan Mirip</h3>
+        <div class="saran-grid" id="saranGrid"></div>
+      </div>
+    </div>
+
+    <div class="detail-sidebar sticky-side is-skel" id="sidebarAksi">
+      <button class="btn-yellow" id="btnKlaim" style="width: 100%; justify-content: center; padding: 14px; margin-bottom: 12px;" onclick="openModalKlaim()">Ajukan Klaim</button>
+      <button class="btn-navy" id="btnChat" style="width: 100%; background: var(--surface); color: var(--heading); padding: 14px;" onclick="goToChat()">💬 Chat Pelapor</button>
+      <button class="btn-outline" id="btnAbuse" style="width: 100%; margin-top: 12px; padding: 12px;" onclick="laporkanAbuse()">🚩 Laporkan Penyalahgunaan</button>
+
+      <div id="infoBox" class="info-box" style="background: #E0F2FE; border-radius: 12px; padding: 16px; margin-top: 20px; font-size: 13px; color: #0369A1;">
+        ℹ️ Pastikan Anda adalah pemilik barang yang sesuai dengan deskripsi sebelum mengajukan klaim.
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP KLAIM -->
+  <div class="modal-overlay" id="modalKlaim">
+    <div class="modal-card">
+      <h3 style="font-size: 22px; color: var(--heading); font-weight: 700;">Ajukan Klaim</h3>
+      <form id="formKlaim" style="margin-top: 16px;">
+        <div class="form-group">
+          <label>Deskripsi Bukti Kepemilikan Barang</label>
+          <textarea id="klaimBukti" class="form-control" rows="4" placeholder="Tulis ciri-ciri khusus yang hanya diketahui pemilik..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Foto Barang atau Dokumen Bukti (maks. 3 file)</label>
+          <input type="file" id="klaimFoto" multiple accept="image/*,.pdf" class="form-control">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+          <button type="button" class="btn-outline" onclick="closeModalKlaim()">Batal</button>
+          <button type="submit" class="btn-yellow" id="btnKirimKlaim">Kirim Klaim &rarr;</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lb-btn lb-close" onclick="closeLightbox()">×</button>
+    <button class="lb-btn lb-prev" onclick="event.stopPropagation(); stepLightbox(-1)">‹</button>
+    <img id="lbImg" alt="" onclick="event.stopPropagation()">
+    <button class="lb-btn lb-next" onclick="event.stopPropagation(); stepLightbox(1)">›</button>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/detail.js"></script>
+  <script src="js/fx.js"></script>
+</body>
+</html>
